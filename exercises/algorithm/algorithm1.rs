@@ -2,7 +2,6 @@
 	single linked list merge
 	This problem requires you to merge two ordered singly linked lists into one ordered singly linked list
 */
-// I AM NOT DONE
 
 use std::fmt::{self, Display, Formatter};
 use std::ptr::NonNull;
@@ -70,13 +69,47 @@ impl<T> LinkedList<T> {
         }
     }
 	pub fn merge(list_a:LinkedList<T>,list_b:LinkedList<T>) -> Self
+	where
+		T: PartialOrd,
 	{
-		//TODO
-		Self {
-            length: 0,
-            start: None,
-            end: None,
-        }
+		// Take all the values out of both lists, keeping the relative order in
+		// which they appear in each (already sorted) list.
+		let mut values_a: Vec<T> = Vec::new();
+		let mut values_b: Vec<T> = Vec::new();
+
+		unsafe {
+			let mut current = list_a.start;
+			while let Some(node_ptr) = current {
+				let node = *Box::from_raw(node_ptr.as_ptr());
+				current = node.next;
+				values_a.push(node.val);
+			}
+			let mut current = list_b.start;
+			while let Some(node_ptr) = current {
+				let node = *Box::from_raw(node_ptr.as_ptr());
+				current = node.next;
+				values_b.push(node.val);
+			}
+		}
+
+		// Merge the two ordered sequences into a new list.
+		let mut merged = Self::new();
+		let mut iter_a = values_a.into_iter().peekable();
+		let mut iter_b = values_b.into_iter().peekable();
+		loop {
+			let take_a = match (iter_a.peek(), iter_b.peek()) {
+				(Some(a), Some(b)) => a <= b,
+				(Some(_), None) => true,
+				(None, Some(_)) => false,
+				(None, None) => break,
+			};
+			if take_a {
+				merged.add(iter_a.next().unwrap());
+			} else {
+				merged.add(iter_b.next().unwrap());
+			}
+		}
+		merged
 	}
 }
 
